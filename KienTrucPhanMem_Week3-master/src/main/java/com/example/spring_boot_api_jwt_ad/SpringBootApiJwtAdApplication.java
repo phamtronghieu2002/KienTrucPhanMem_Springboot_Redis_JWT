@@ -19,14 +19,7 @@ private UserServiceImpl userService;
         SpringApplication.run(SpringBootApiJwtAdApplication.class, args);
 
     }
-    @Bean
-    public CommandLineRunner commandLineRunner() {
-        return args -> {
-            UserPrincipal cuong = userService.findByUsername("cuong");
-            System.out.println(cuong);
 
-        };
-    }
 
 
 }

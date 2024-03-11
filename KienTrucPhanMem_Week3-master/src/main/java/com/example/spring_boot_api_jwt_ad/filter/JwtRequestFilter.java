@@ -52,7 +52,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (null != user && null != token && token.getTokenExpDate().after(new Date())) {
-
+            System.out.println("Token lot vo ");
             Set<GrantedAuthority> authorities = new HashSet<>();
 
             user.getAuthorities().forEach(

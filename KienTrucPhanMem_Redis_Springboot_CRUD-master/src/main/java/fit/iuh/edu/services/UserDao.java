@@ -41,4 +41,22 @@ public class UserDao {
         userRepository.deleteById(id);
         return "User removed !!";
     }
+
+    public User updateUser(User updatedUser) {
+        String userId = updatedUser.getId();
+
+        // Check if the user with the given ID exists
+        if (template.opsForHash().hasKey(HASH_KEY, userId)) {
+            // Update the user in Redis
+            template.opsForHash().put(HASH_KEY, userId, updatedUser);
+
+
+
+
+            return updatedUser;
+        } else {
+
+            throw new RuntimeException("User not found with ID: " + userId);
+        }
+    }
 }

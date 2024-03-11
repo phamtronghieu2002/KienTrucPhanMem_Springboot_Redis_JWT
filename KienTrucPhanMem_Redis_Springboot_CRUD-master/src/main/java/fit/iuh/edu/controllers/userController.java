@@ -6,13 +6,11 @@ import fit.iuh.edu.repositories.UserRepository;
 import fit.iuh.edu.services.UserDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -21,44 +19,58 @@ public class userController {
 
 
     RestTemplate restTemplate = new RestTemplate();
-
+    @Autowired
+    UserRepository userRepository;
 
     @Autowired
     private UserDao userService;
 
 
     @GetMapping("/user/{id}")
-    public User getUserById(@PathVariable String id) {
+    public ResponseEntity<User> getUserById(@PathVariable String id, @RequestHeader(HttpHeaders.AUTHORIZATION) String token) {
+
+      if(token.isEmpty()){
+          return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+      }
+        try {
+            String apiUrl = "http://localhost:8081/car";
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", token);
+            System.out.println(token);
+
+            HttpEntity<String> entity = new HttpEntity<>(headers);
 
 
-        String apiUrl = "http://localhost:8082/car?userid="+id;
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Token YourAccessTokenHere");
+            ParameterizedTypeReference<ArrayList<Car>> responseType = new ParameterizedTypeReference<ArrayList<Car>>() {
+            };
+            ResponseEntity<ArrayList<Car>> response = restTemplate.exchange(apiUrl, HttpMethod.GET, entity, responseType);
+            ArrayList<Car> carList = response.getBody();
+            System.out.println("carlist:"+carList);
 
+            User user = userService.findUserById(id);
 
-        HttpEntity<String> entity = new HttpEntity<>(headers);
-
-
-        ParameterizedTypeReference<List<Car>> responseType = new ParameterizedTypeReference<List<Car>>() {};
-        ResponseEntity<List<Car>> response = restTemplate.exchange(apiUrl + "1", HttpMethod.GET, entity, responseType);
-
-
-        List<Car> carList = response.getBody();
-
-        User user=userService.findUserById(id);
-        user.setCars(carList);
-
-        return  user;
+//            System.out.println("user:"+user);
+            user.setCars(carList);
+            userService.updateUser(user);
+            return ResponseEntity.status(HttpStatus.OK).body(user);
+        } catch (Exception e){
+            System.out.println(e);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
 
     }
-
+}
 
     @GetMapping("/users")
     public List<User> getAllUsers() {
         return userService.findAll();
     }
+
+    @GetMapping("/user/abc")
+    public User getdamn() {
+        return userService.findUserById("1");
+    }
     @PostMapping("/users")
-    public User listAll(@RequestBody User user) {
+    public User addUser(@RequestBody User user) {
 
         return userService.save(user);
     }
